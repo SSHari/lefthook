@@ -22,7 +22,7 @@ func PushFiles() ([]string, error) {
 }
 
 func ExecGitCommand(command string) ([]string, error) {
-	cmd := exec.Command("sh", "-c", command)
+	cmd := exec.Command("bash", "-c", command)
 
 	outputBytes, err := cmd.CombinedOutput()
 	if err != nil {

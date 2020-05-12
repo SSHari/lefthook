@@ -215,7 +215,7 @@ func executeCommand(hooksGroup, commandName string, wg *sync.WaitGroup) {
 	runner = strings.Replace(runner, subAllFiles, strings.Join(files, " "), -1)
 	runner = strings.Replace(runner, subFiles, strings.Join(files, " "), -1)
 
-	command := exec.Command("sh", "-c", runner)
+	command := exec.Command("bash", "-c", runner)
 	if cmdRoot != "" {
 		fullPath, _ := filepath.Abs(cmdRoot)
 		command.Dir = fullPath
