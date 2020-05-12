@@ -9,20 +9,20 @@ import (
 	"strings"
 )
 
-func StagedFiles() ([]string, error) {
-	return ExecGitCommand("git diff --name-only --cached")
+func StagedFiles(shellType string) ([]string, error) {
+	return ExecGitCommand("git diff --name-only --cached", shellType)
 }
 
-func AllFiles() ([]string, error) {
-	return ExecGitCommand("git ls-files --cached")
+func AllFiles(shellType string) ([]string, error) {
+	return ExecGitCommand("git ls-files --cached", shellType)
 }
 
-func PushFiles() ([]string, error) {
-	return ExecGitCommand("git diff --name-only HEAD @{push} || git diff --name-only HEAD master")
+func PushFiles(shellType string) ([]string, error) {
+	return ExecGitCommand("git diff --name-only HEAD @{push} || git diff --name-only HEAD master", shellType)
 }
 
-func ExecGitCommand(command string) ([]string, error) {
-	cmd := exec.Command("sh", "-c", command)
+func ExecGitCommand(command string, shellType string) ([]string, error) {
+	cmd := exec.Command(shellType, "-c", command)
 
 	outputBytes, err := cmd.CombinedOutput()
 	if err != nil {

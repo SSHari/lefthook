@@ -46,6 +46,7 @@ const (
 	runnerArgsConfigKey  string      = "runner_args"
 	scriptsConfigKey     string      = "scripts"
 	commandsConfigKey    string      = "commands"
+	shellTypeConfigKey   string      = "shell_type"
 	includeConfigKey     string      = "include"
 	excludeConfigKey     string      = "exclude"
 	globConfigKey        string      = "glob"
@@ -179,15 +180,16 @@ func executeCommand(hooksGroup, commandName string, wg *sync.WaitGroup) {
 
 	files := []string{}
 	runner := getRunner(hooksGroup, commandsConfigKey, commandName)
+	shellType := getShellType(hooksGroup, commandsConfigKey, commandName)
 
 	if strings.Contains(runner, subStagedFiles) {
-		files, _ = context.StagedFiles()
+		files, _ = context.StagedFiles(shellType)
 	} else if strings.Contains(runner, subFiles) || getCommandFiles(hooksGroup, commandName) != "" {
-		files, _ = context.ExecGitCommand(getCommandFiles(hooksGroup, commandName))
+		files, _ = context.ExecGitCommand(getCommandFiles(hooksGroup, commandName), shellType)
 	} else if strings.Contains(runner, pushFiles) {
-		files, _ = context.PushFiles()
+		files, _ = context.PushFiles(shellType)
 	} else {
-		files, _ = context.AllFiles()
+		files, _ = context.AllFiles(shellType)
 	}
 
 	VerbosePrint("\nFiles before filters: \n", files)
@@ -215,7 +217,7 @@ func executeCommand(hooksGroup, commandName string, wg *sync.WaitGroup) {
 	runner = strings.Replace(runner, subAllFiles, strings.Join(files, " "), -1)
 	runner = strings.Replace(runner, subFiles, strings.Join(files, " "), -1)
 
-	command := exec.Command("sh", "-c", runner)
+	command := exec.Command(shellType, "-c", runner)
 	if cmdRoot != "" {
 		fullPath, _ := filepath.Abs(cmdRoot)
 		command.Dir = fullPath
@@ -346,6 +348,18 @@ func executeScript(hooksGroup, source string, executable os.FileInfo, wg *sync.W
 		failList = append(failList, executableName)
 		setPipeBroken()
 	}
+}
+
+func getShellType(hooksGroup, source, executableName string) string {
+	key := strings.Join([]string{hooksGroup, source, executableName, shellTypeConfigKey}, ".")
+	shellType := viper.GetString(key)
+
+	// Set the default shell type to sh if no shell type property is specified
+	if shellType == "" {
+		shellType = "sh"
+	}
+
+	return shellType
 }
 
 func haveRunner(hooksGroup, source, executableName string) (out bool) {
